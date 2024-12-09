@@ -14,28 +14,28 @@ module myreg #(
   output logic [31:0] 	      device_rdata_o
 );
   
-  localparam int 	       unsigned POLY1305_R0 = 32h'80006000;
-  localparam int 	       unsigned POLY1305_R1 = 32h'80006004;
-  localparam int 	       unsigned POLY1305_R2 = 32h'80006008;
-  localparam int 	       unsigned POLY1305_R3 = 32h'8000600C;
+  localparam int 	       unsigned POLY1305_R0 = 32'h80006000;
+  localparam int 	       unsigned POLY1305_R1 = 32'h80006004;
+  localparam int 	       unsigned POLY1305_R2 = 32'h80006008;
+  localparam int 	       unsigned POLY1305_R3 = 32'h8000600C;
   
-  localparam int 	       unsigned POLY1305_S0 = 32h'80006010;
-  localparam int 	       unsigned POLY1305_S1 = 32h'80006014;
-  localparam int 	       unsigned POLY1305_S2 = 32h'80006018;
-  localparam int 	       unsigned POLY1305_S3 = 32h'8000601C;
+  localparam int 	       unsigned POLY1305_S0 = 32'h80006010;
+  localparam int 	       unsigned POLY1305_S1 = 32'h80006014;
+  localparam int 	       unsigned POLY1305_S2 = 32'h80006018;
+  localparam int 	       unsigned POLY1305_S3 = 32'h8000601C;
   
-  localparam int 	       unsigned POLY1305_M0 = 32h'80006020;
-  localparam int 	       unsigned POLY1305_M1 = 32h'80006024;
-  localparam int 	       unsigned POLY1305_M2 = 32h'80006028;
-  localparam int 	       unsigned POLY1305_M3 = 32h'8000602C;
+  localparam int 	       unsigned POLY1305_M0 = 32'h80006020;
+  localparam int 	       unsigned POLY1305_M1 = 32'h80006024;
+  localparam int 	       unsigned POLY1305_M2 = 32'h80006028;
+  localparam int 	       unsigned POLY1305_M3 = 32'h8000602C;
   
-  localparam int 	       unsigned POLY1305_P0 = 32h'80006030;
-  localparam int 	       unsigned POLY1305_P1 = 32h'80006034;
-  localparam int 	       unsigned POLY1305_P2 = 32h'80006038;
-  localparam int 	       unsigned POLY1305_P3 = 32h'8000603C;
+  localparam int 	       unsigned POLY1305_P0 = 32'h80006030;
+  localparam int 	       unsigned POLY1305_P1 = 32'h80006034;
+  localparam int 	       unsigned POLY1305_P2 = 32'h80006038;
+  localparam int 	       unsigned POLY1305_P3 = 32'h8000603C;
   
-  localparam int 	       unsigned POLY1305_CTL = 32h'80006040;
-  localparam int 	       unsigned POLY1305_STAT = 32h'80006044;
+  localparam int 	       unsigned POLY1305_CTL = 32'h80006040;
+  localparam int 	       unsigned POLY1305_STAT = 32'h80006044;
   
   logic [RegAddr-1:0] 	       reg_addr;
   
@@ -43,7 +43,7 @@ module myreg #(
   logic rdy;
   
   //stores p values from poly1305 
-  logic [127:0] full_p;
+  logic [127:0] p_full;
   
   logic 		      r0_wr, r0_rd, r1_wr, r1_rd, r2_wr, r2_rd, r3_wr, r3_rd;
   logic           s0_wr, s0_rd, s1_wr, s1_rd, s2_wr, s2_rd, s3_wr, s3_rd;
@@ -115,7 +115,7 @@ module myreg #(
 
 
   poly1305 DUT(.rst_ni(rst_ni), .clk(clk),
-               .r({r3_, r2_data, r1_data, r0_data}),
+               .r({r3_data, r2_data, r1_data, r0_data}),
                .s({s3_data, s2_data, s1_data, s0_data}),
                .m({m3_data, m2_data, m1_data, m0_data}),
                //ADD FB, LD, and FIRST -> could be values froms stat
@@ -123,8 +123,8 @@ module myreg #(
                //create separate signal that tracks when a signal is asserted (on signal edge)
                .fb(ctl_data[0]), .ld(1), .first(ctl_data[2]),
                //might need to store p in a buffer then break it up later
-               //need to break full_p into parts later
-               .p(full_p),
+               //need to break p_full into parts later
+               .p(p_full),
                .rdy(rdy));
   
   always @(posedge clk_i or negedge rst_ni) begin
