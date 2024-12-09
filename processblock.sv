@@ -94,7 +94,7 @@ module processblock(input rst_ni,
     end
     else begin
     
-      case(state) begin
+      case(state)
       
         M2_CALC: begin
           dutStart <= 1;
@@ -125,7 +125,7 @@ module processblock(input rst_ni,
       a_out <= 0;
     end
     else begin
-      case(state) begin
+      case(state)
         M1_CALC: begin
           m1 <= m + a_in;
         end
@@ -141,7 +141,7 @@ module processblock(input rst_ni,
         DONE: begin
           done <= 1;
         end
-      end
+      endcase
     end
   end
   
