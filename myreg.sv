@@ -58,6 +58,12 @@ module myreg #(
   logic [31:0] 	       p0_data, p1_data, p2_data, p3_data;
   logic [31:0] 	       ctl_data, stat_data;
   
+  logic [31:0] 	       r0_delay_data, r1_delay_data, r2_delay_data, r3_delay_data;
+  logic [31:0] 	       s0_delay_data, s1_delay_data, s2_delay_data, s3_delay_data;
+  logic [31:0] 	       m0_delay_data, m1_delay_data, m2_delay_data, m3_delay_data;
+  logic [31:0] 	       p0_delay_data, p1_delay_data, p2_delay_data, p3_delay_data;
+  logic [31:0] 	       ctl_delay_data, stat_delay_data;
+
   
   // Decode write and read requests.
   assign reg_addr          = device_addr_i[RegAddr-1:0];
@@ -109,13 +115,13 @@ module myreg #(
 
 
   poly1305 DUT(.rst_ni(rst_ni), .clk(clk),
-               .r({r3_data, r2_data, r1_data, r0_data}),
-               .s({s3, s2, s1, s0}),
-               .m({m3, m2, m1, mo}),
+               .r({r3_, r2_data, r1_data, r0_data}),
+               .s({s3_data, s2_data, s1_data, s0_data}),
+               .m({m3_data, m2_data, m1_data, m0_data}),
                //ADD FB, LD, and FIRST -> could be values froms stat
                //software is slow compared to hardware so signal might be assereted for multiple cycles, will need to handle that 
                //create separate signal that tracks when a signal is asserted (on signal edge)
-               .fb(), .ld(), .first(),
+               .fb(ctl_data[0]), .ld(1), .first(ctl_data[2]),
                //might need to store p in a buffer then break it up later
                //need to break full_p into parts later
                .p(full_p),
@@ -153,7 +159,33 @@ module myreg #(
     ctl_data <= 32'b0;
     stat_data <= 32'b0;
     
+    r0_delay_data <= 32'b0;
+    r1_delay_data <= 32'b0;
+    r2_delay_data <= 32'b0;
+    r3_delay_data <= 32'b0;
+    
+    s0_delay_data <= 32'b0;
+    s1_delay_data <= 32'b0;
+    s2_delay_data <= 32'b0;
+    s3_delay_data <= 32'b0;
+    
+    m0_delay_data <= 32'b0;
+    m1_delay_data <= 32'b0;
+    m2_delay_data <= 32'b0;
+    m3_delay_data <= 32'b0;
+    
+    p0_delay_data <= 32'b0;
+    p1_delay_data <= 32'b0;
+    p2_delay_data <= 32'b0;
+    p3_delay_data <= 32'b0;
+    
+    ctl_delay_data <= 32'b0;
+    stat_delay_data <= 32'b0;
+
+    
   end else begin
+  
+  //INPUTS
   
   //R
   if (r0_wr) begin
@@ -244,6 +276,19 @@ module myreg #(
     m3_data[31:24] <= {device_be_i[3] ? device_wdata_i[31:24] : m3_data[31:24]};	    
   end
   
+  
+  //CTL and STAT
+  if (ctl_wr) begin
+    ctl_data[7:0]   <= {device_be_i[0] ? device_wdata_i[7:0] : ctl_data[7:0]};
+    ctl_data[15:8]  <= {device_be_i[1] ? device_wdata_i[15:8] : ctl_data[15:8]};
+    ctl_data[23:16] <= {device_be_i[2] ? device_wdata_i[23:16] : ctl_data[23:16]};
+    ctl_data[31:24] <= {device_be_i[3] ? device_wdata_i[31:24] : ctl_data[31:24]};
+    
+  end
+  
+  
+  //OUPUTS
+  
   //IS THIS THE CORRECT WAY OF HANDLING THE CO-PROCESSRO DATA?
   //DOES THIS NEED TO BE BROKEN INTO 8 BIT PARTS
   if(rdy) begin
@@ -251,7 +296,7 @@ module myreg #(
     p2_data <= p_full[95:63];
     p1_data <= p_full[63:32];
     p0_data <= p_full[31:0];
-  end else
+  end
   
   //P - I THINK THIS IS LOAD IN SOFTWARE VALUES
   if (p0_wr) begin
@@ -281,19 +326,6 @@ module myreg #(
     p3_data[23:16] <= {device_be_i[2] ? device_wdata_i[23:16] : p3_data[23:16]};
     p3_data[31:24] <= {device_be_i[3] ? device_wdata_i[31:24] : p3_data[31:24]};	    
   end
-  
-
-
-  //CTL and STAT
-  if (ctl_wr) begin
-    ctl_data[7:0]   <= {device_be_i[0] ? device_wdata_i[7:0] : ctl_data[7:0]};
-    ctl_data[15:8]  <= {device_be_i[1] ? device_wdata_i[15:8] : ctl_data[15:8]};
-    ctl_data[23:16] <= {device_be_i[2] ? device_wdata_i[23:16] : ctl_data[23:16]};
-    ctl_data[31:24] <= {device_be_i[3] ? device_wdata_i[31:24] : ctl_data[31:24]};
-    
-  end
-  
-
                  
   
   if (stat_wr) begin
@@ -310,63 +342,88 @@ module myreg #(
   // Assign device_rdata_o according to request type.
   always_comb begin
   
-  //ADD: delay by one clock->cycle create r0_read_delay which comes one clock cycle later, bus protocol requires one second delay to function correctly
+  //Delay output by one cycle so that bus protocol can function correctly
+  r0_delay_data <= r0_data;
+  r1_delay_data <= r1_data;
+  r2_delay_data <= r2_data;
+  r3_delay_data <= r3_data;
+  
+  s0_delay_data <= s0_data;
+  s1_delay_data <= s1_data;
+  s2_delay_data <= s2_data;
+  s3_delay_data <= s3_data;
+  
+  m0_delay_data <= m0_data;
+  m1_delay_data <= m1_data;
+  m2_delay_data <= m2_data;
+  m3_delay_data <= m3_data;
+  
+  p0_delay_data <= p0_data;
+  p1_delay_data <= p1_data;
+  p2_delay_data <= p2_data;
+  p3_delay_data <= p3_data;
+  
+  ctl_delay_data <= ctl_data;
+  stat_delay_data <= stat_data;
+
+  
   if (r0_rd)
-    device_rdata_o = r0_data;
+    device_rdata_o = r0_delay_data;
     
   else if (r1_rd)
-    device_rdata_o = r1_data;
-    
+      device_rdata_o = r1_delay_data;
+      
   else if (r2_rd)
-    device_rdata_o = r2_data;
-    
+      device_rdata_o = r2_delay_data;
+      
   else if (r3_rd)
-    device_rdata_o = r3_data;
-    
+      device_rdata_o = r3_delay_data;
+      
   else if (s0_rd)
-    device_rdata_o = s0_data;
-    
+      device_rdata_o = s0_delay_data;
+      
   else if (s1_rd)
-    device_rdata_o = s1_data;
-    
+      device_rdata_o = s1_delay_data;
+      
   else if (s2_rd)
-    device_rdata_o = s2_data;
-    
+      device_rdata_o = s2_delay_data;
+      
   else if (s3_rd)
-    device_rdata_o = s3_data;
-    
+      device_rdata_o = s3_delay_data;
+      
   else if (m0_rd)
-    device_rdata_o = m0_data;
-    
+      device_rdata_o = m0_delay_data;
+      
   else if (m1_rd)
-    device_rdata_o = m1_data;
-    
+      device_rdata_o = m1_delay_data;
+      
   else if (m2_rd)
-    device_rdata_o = m2_data;
-    
+      device_rdata_o = m2_delay_data;
+      
   else if (m3_rd)
-    device_rdata_o = m3_data;
-    
+      device_rdata_o = m3_delay_data;
+      
   else if (p0_rd)
-    device_rdata_o = p0_data;
-    
+      device_rdata_o = p0_delay_data;
+      
   else if (p1_rd)
-    device_rdata_o = p1_data;
-    
+      device_rdata_o = p1_delay_data;
+      
   else if (p2_rd)
-    device_rdata_o = p2_data;
-    
+      device_rdata_o = p2_delay_data;
+      
   else if (p3_rd)
-    device_rdata_o = p3_data;
-    
+      device_rdata_o = p3_delay_data;
+      
   else if (ctl_rd)
-    device_rdata_o = ctl_data;
-    
+      device_rdata_o = ctl_delay_data;
+      
   else if (stat_rd)
-    device_rdata_o = stat_data;
-
+      device_rdata_o = stat_delay_data;
+  
   else
-    device_rdata_o = 32'b0;
+      device_rdata_o = 32'b0;
+
     
   end
   
