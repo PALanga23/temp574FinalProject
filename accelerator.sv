@@ -145,7 +145,7 @@ module accelerator #(
   
   
   //control done and start signals
-  always_ff(posedge clk or negedge rst_ni) begin
+  always_ff@(posedge clk or negedge rst_ni) begin
     if(!rst_ni) begin
       done <= 0;
       subAcc1Start <= 0;
