@@ -324,5 +324,4 @@ module accelerator #(
     end
   end 
 
-
-end module
+endmodule
