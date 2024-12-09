@@ -21,7 +21,7 @@ module poly1305(
   wire [127:0] rclamp;
   assign rclamp = r & 128'h0FFF_FFFC_0FFF_FFFC_0FFF_FFFC_0FFF_FFFF;
   
-  processblock single(.nst_ni(rst_ni),
+  processblock single(.rst_ni(rst_ni),
   .clk (clk),
   .r (rclamp),
   .m (msep),
