@@ -287,7 +287,10 @@ module myreg #(
       
       
       //CTL
-      if (ctl_wr) begin
+      if(rdy) begin
+       ctl_data <= 32'd7;
+      end
+      else if (ctl_wr) begin
         ctl_data[7:0]   <= {device_be_i[0] ? device_wdata_i[7:0] : ctl_data[7:0]};
         ctl_data[15:8]  <= {device_be_i[1] ? device_wdata_i[15:8] : ctl_data[15:8]};
         ctl_data[23:16] <= {device_be_i[2] ? device_wdata_i[23:16] : ctl_data[23:16]};
