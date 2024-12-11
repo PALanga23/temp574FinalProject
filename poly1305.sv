@@ -9,19 +9,22 @@ module poly1305(
   input first,
   output [127:0] p,
   output rdy);
-  
+
   reg [129:0] acc;
   wire [129:0] acc_out;
   wire [129:0] acc_in;
   wire block_start;
   wire block_done;
   wire [128:0] msep;
-  assign msep = fb ? {1'b1, m} : m;
-  assign acc_in = first ? 130'b0 : acc;
-  wire [127:0] rclamp;
-  assign rclamp = r & 128'h0FFF_FFFC_0FFF_FFFC_0FFF_FFFC_0FFF_FFFF;
   
-  processblock single(.rst_ni(rst_ni),
+  assign msep = fb ? {1'b1, m} : {1'b0, m};
+  assign acc_in = first ? 130'b0 : acc;
+  
+  wire [127:0] rclamp;
+  
+  assign rclamp = r & 128'h0FFF_FFFC_0FFF_FFFC_0FFF_FFFC_0FFF_FFFF;
+
+  processblock single(.reset_n(rst_ni),
   .clk (clk),
   .r (rclamp),
   .m (msep),
@@ -30,15 +33,16 @@ module poly1305(
   .start(block_start),
   .done (block_done)
   );
-  
-  always @(posedge clk)
+
+  always_ff@(posedge clk or negedge rst_ni) begin
     if (!rst_ni)
       acc <= 130'h0;
     else
       acc <= block_done ? acc_out : acc;
-  
+  end
+
   assign block_start = ld;
-  assign p = acc_out + s;
+  assign p = acc_out[127:0] + s;
   assign rdy = block_done;
-  
+
 endmodule
