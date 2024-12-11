@@ -118,6 +118,10 @@ module processblock(
       end
       else begin
         case(current_state)
+          IDLE: begin
+            //do nothing
+          end
+        
           M1_CALC: begin
             m1 <= {2'b0, m} + {1'b0, a_in};
           end
@@ -141,6 +145,10 @@ module processblock(
           end
           
           A_OUT_CALC: begin
+            //do nothing
+          end
+          
+          DONE: begin
             //do nothing
           end
           
